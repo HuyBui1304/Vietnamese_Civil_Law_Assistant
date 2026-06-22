@@ -1,0 +1,58 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+
+# Downloaded third-party binaries
+tools/
+
+# Generated pipeline artifacts
+data/extracted_text/
+data/transcripts/
+data/chunks/
+data/embeddings/
+data/dataset/
+vector_stores/
+outputs/
+models/lora_adapter/
+
+# Large/local input data (see README for expected locations)
+data/pdf/*
+data/audio/*
+data/test_image/*
+!data/pdf/.gitkeep
+!data/audio/.gitkeep
+!data/test_image/.gitkeep
+

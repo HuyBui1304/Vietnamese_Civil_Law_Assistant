@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatbot Bộ Luật Dân Sự 2015</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #818CF8;
+    --primary-dark: #3730A3;
+    --bg: #0F172A;
+    --bg-card: #1E293B;
+    --bg-input: #334155;
+    --text: #F1F5F9;
+    --text-muted: #94A3B8;
+    --border: #334155;
+    --user-bubble: linear-gradient(135deg, #4F46E5, #7C3AED);
+    --bot-bubble: #1E293B;
+    --success: #10B981;
+    --danger: #EF4444;
+    --shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 900px;
+    height: 95vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary-dark), #1E1B4B);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .header-icon {
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+
+  .header-text h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-text p { font-size: 12px; color: var(--primary-light); margin-top: 3px; font-weight: 500; }
+
+  .status {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Messages */
+  .messages {
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 20px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 6px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Welcome */
+  .welcome {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 1; text-align: center; padding: 40px 20px;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .welcome-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--primary), #7C3AED);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; margin-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(79,70,229,0.3);
+  }
+
+  .welcome h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .welcome p { color: var(--text-muted); font-size: 14px; max-width: 400px; line-height: 1.6; }
+
+  .suggestions {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; margin-top: 24px; max-width: 600px;
+  }
+
+  .suggestion {
+    padding: 10px 18px;
+    background: var(--bg-card); color: var(--primary-light);
+    border: 1px solid var(--border); border-radius: 12px;
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    transition: all 0.2s; font-weight: 500;
+  }
+
+  .suggestion:hover {
+    background: var(--primary-dark); border-color: var(--primary);
+    color: white; transform: translateY(-1px);
+  }
+
+  /* Message bubbles */
+  .msg-row {
+    display: flex; gap: 12px;
+    animation: msgIn 0.3s ease; max-width: 80%;
+  }
+
+  @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-row.bot { align-self: flex-start; }
+
+  .msg-avatar {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; margin-top: 2px;
+  }
+
+  .msg-row.user .msg-avatar { background: linear-gradient(135deg, #4F46E5, #7C3AED); }
+  .msg-row.bot .msg-avatar { background: var(--bg-input); }
+
+  .msg-content { display: flex; flex-direction: column; gap: 6px; }
+
+  .msg-bubble {
+    padding: 14px 18px; border-radius: 16px;
+    font-size: 14px; line-height: 1.7;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  .msg-row.user .msg-bubble {
+    background: var(--user-bubble); color: white;
+    border-bottom-right-radius: 6px;
+  }
+
+  .msg-row.bot .msg-bubble {
+    background: var(--bot-bubble); border: 1px solid var(--border);
+    color: var(--text); border-bottom-left-radius: 6px;
+  }
+
+  .msg-time { font-size: 11px; color: var(--text-muted); padding: 0 4px; }
+  .msg-row.user .msg-time { text-align: right; }
+
+  .msg-footer { display: flex; align-items: center; gap: 8px; }
+
+  .btn-speak {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 15px; padding: 2px 6px;
+    border-radius: 6px; transition: all 0.2s;
+  }
+
+  .btn-speak:hover { color: var(--primary-light); background: rgba(79,70,229,0.1); }
+  .btn-speak.playing { color: var(--primary-light); }
+
+  /* Audio player */
+  .audio-box {
+    margin-top: 10px; padding: 12px 14px;
+    background: rgba(79,70,229,0.08);
+    border: 1px solid rgba(79,70,229,0.2);
+    border-radius: 12px;
+  }
+
+  .audio-box .audio-label {
+    font-size: 12px; color: var(--primary-light);
+    font-weight: 600; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .audio-box audio {
+    width: 100%; height: 36px; border-radius: 8px;
+  }
+
+  .audio-box .audio-desc {
+    font-size: 11px; color: var(--text-muted); margin-top: 6px;
+  }
+
+  /* Route badge */
+  .route-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 6px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-top: 8px;
+  }
+
+  .route-badge.rag { background: rgba(16,185,129,0.15); color: #10B981; }
+  .route-badge.web { background: rgba(245,158,11,0.15); color: #F59E0B; }
+  .route-badge.calc { background: rgba(99,102,241,0.15); color: #818CF8; }
+
+  /* Sources */
+  .sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .source-tag {
+    padding: 4px 10px;
+    background: rgba(79,70,229,0.15); color: var(--primary-light);
+    border-radius: 6px; font-size: 11px; font-weight: 600;
+  }
+
+  /* Typing */
+  .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 16px 20px; }
+
+  .typing-dot {
+    width: 8px; height: 8px;
+    background: var(--text-muted); border-radius: 50%;
+    animation: typingBounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Input Area */
+  .input-area {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(30,41,59,0.5);
+    backdrop-filter: blur(10px);
+  }
+
+  .input-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 16px; padding: 6px 6px 6px 18px;
+    transition: border-color 0.2s;
+  }
+
+  .input-row:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+
+  .input-row input {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none; padding: 10px 0;
+  }
+
+  .input-row input::placeholder { color: var(--text-muted); }
+
+  .input-actions { display: flex; align-items: center; gap: 4px; }
+
+  .btn-icon {
+    width: 40px; height: 40px; border-radius: 12px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: all 0.2s;
+  }
+
+  .btn-icon:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  .btn-mic {
+    width: 40px; height: 40px; border-radius: 12px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; transition: all 0.2s; position: relative;
+  }
+
+  .btn-mic:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  .btn-mic.recording {
+    color: var(--danger); background: rgba(239,68,68,0.15);
+    animation: micPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  }
+
+  .btn-send {
+    width: 42px; height: 42px; border-radius: 12px; border: none;
+    background: var(--primary); color: white; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: all 0.2s;
+  }
+
+  .btn-send:hover { background: var(--primary-dark); transform: scale(1.05); }
+  .btn-send:disabled { background: var(--bg-input); color: var(--text-muted); cursor: not-allowed; transform: none; }
+
+  .input-hint {
+    text-align: center; font-size: 11px; color: var(--text-muted);
+    margin-top: 10px; opacity: 0.6;
+  }
+
+  /* Recording bar */
+  .recording-bar {
+    display: none; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 16px; margin-bottom: 10px;
+  }
+
+  .recording-bar.active { display: flex; }
+
+  .rec-dot {
+    width: 10px; height: 10px; background: var(--danger);
+    border-radius: 50%; animation: recBlink 1s ease-in-out infinite;
+  }
+
+  @keyframes recBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .rec-text { flex: 1; font-size: 13px; color: var(--danger); font-weight: 500; }
+  .rec-time { font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .rec-cancel, .rec-stop {
+    padding: 6px 14px; border-radius: 8px; border: none;
+    font-size: 12px; font-family: inherit; cursor: pointer;
+    font-weight: 600; transition: all 0.2s;
+  }
+
+  .rec-cancel {
+    background: transparent; color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .rec-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .rec-stop { background: var(--danger); color: white; }
+  .rec-stop:hover { background: #DC2626; }
+
+  /* Upload modal */
+  .upload-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+
+  .upload-overlay.active { display: flex; }
+
+  .upload-modal {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; width: 400px; max-width: 90vw;
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  .upload-modal h3 { font-size: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  .upload-options { display: flex; flex-direction: column; gap: 12px; }
+
+  .upload-option {
+    padding: 16px; background: var(--bg-input);
+    border: 1px solid var(--border); border-radius: 12px;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 12px;
+    font-family: inherit; color: var(--text); font-size: 14px; text-align: left;
+  }
+
+  .upload-option:hover { border-color: var(--primary); background: rgba(79,70,229,0.1); }
+
+  .upload-option .icon {
+    width: 40px; height: 40px;
+    background: rgba(79,70,229,0.15); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+
+  .upload-option .label { font-weight: 600; }
+  .upload-option .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .upload-cancel {
+    margin-top: 16px; width: 100%; padding: 12px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text-muted);
+    font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s;
+  }
+
+  .upload-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
+  @media (max-width: 640px) {
+    .app { height: 100vh; border-radius: 0; border: none; }
+    .msg-row { max-width: 90%; }
+    .header { padding: 16px 20px; }
+    .messages { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-icon">&#9878;</div>
+    <div class="header-text">
+      <h1>Chatbot Bộ Luật Dân Sự 2015</h1>
+      <p>RAG + Gemini &bull; Tra cứu pháp luật dân sự Việt Nam</p>
+    </div>
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Trực tuyến</span>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">&#9878;</div>
+      <h2>Xin chào!</h2>
+      <p>Tôi là trợ lý pháp luật chuyên về Bộ Luật Dân Sự Việt Nam 2015. Hãy đặt câu hỏi cho tôi.</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="sendSuggestion(this)">Quyền dân sự là gì?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Năng lực hành vi dân sự của cá nhân?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Hợp đồng dân sự là gì?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Quyền thừa kế được quy định thế nào?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Thế nào là giao dịch dân sự vô hiệu?</button>
+        <button class="suggestion" onclick="sendSuggestion(this)">Trách nhiệm bồi thường thiệt hại?</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <!-- Recording bar -->
+    <div class="recording-bar" id="recordingBar">
+      <div class="rec-dot"></div>
+      <span class="rec-text">Đang ghi âm...</span>
+      <span class="rec-time" id="recTime">00:00</span>
+      <button class="rec-cancel" onclick="cancelRecording()">Huỷ</button>
+      <button class="rec-stop" onclick="stopRecording()">Gửi</button>
+    </div>
+
+    <div class="input-row">
+      <input type="text" id="input" placeholder="Nhập câu hỏi pháp luật..." onkeydown="if(event.key==='Enter'&&!event.shiftKey) send()">
+      <div class="input-actions">
+        <button class="btn-mic" id="btnMic" onclick="toggleMic()" title="Nhấn để nói">
+          &#127908;
+        </button>
+        <button class="btn-icon" onclick="openUpload()" title="Gửi ảnh/file">
+          &#128206;
+        </button>
+        <button class="btn-send" id="btnSend" onclick="send()" title="Gửi">
+          &#10148;
+        </button>
+      </div>
+    </div>
+    <div class="input-hint">Nhấn Enter để gửi &bull; Hỗ trợ văn bản, giọng nói, hình ảnh</div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="upload-overlay" id="uploadOverlay" onclick="if(event.target===this) closeUpload()">
+  <div class="upload-modal">
+    <h3>&#128206; Gửi file</h3>
+    <div class="upload-options">
+      <button class="upload-option" onclick="triggerUpload('audio')">
+        <div class="icon">&#127908;</div>
+        <div>
+          <div class="label">Âm thanh (ghi âm)</div>
+          <div class="desc">Upload file .wav, .mp3 — Whisper sẽ chuyển thành văn bản</div>
+        </div>
+      </button>
+      <button class="upload-option" onclick="triggerUpload('image')">
+        <div class="icon">&#128247;</div>
+        <div>
+          <div class="label">Hình ảnh (OCR)</div>
+          <div class="desc">Upload ảnh chụp câu hỏi — OCR sẽ đọc văn bản</div>
+        </div>
+      </button>
+    </div>
+    <button class="upload-cancel" onclick="closeUpload()">Huỷ</button>
+  </div>
+</div>
+
+<input type="file" id="fileAudio" accept="audio/*" style="display:none" onchange="handleFile('audio')">
+<input type="file" id="fileImage" accept="image/*" style="display:none" onchange="handleFile('image')">
+
+<script>
+const API = 'http://localhost:8000';
+let isLoading = false;
+
+// ── Server status ──
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API}/health`);
+    if (res.ok) {
+      document.getElementById('statusDot').style.background = '#10B981';
+      document.getElementById('statusText').textContent = 'Trực tuyến';
+    }
+  } catch {
+    document.getElementById('statusDot').style.background = '#EF4444';
+    document.getElementById('statusText').textContent = 'Ngoại tuyến';
+  }
+}
+checkHealth();
+setInterval(checkHealth, 15000);
+
+function timeNow() {
+  return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Messages ──
+function addMessage(text, role, sources, audioInfo, route) {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.innerHTML = role === 'user' ? '&#128100;' : '&#9878;';
+
+  const content = document.createElement('div');
+  content.className = 'msg-content';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = text;
+  content.appendChild(bubble);
+
+  // Route badge (Bước 9: Agent cho biết route nào)
+  if (route && role === 'bot') {
+    const badge = document.createElement('span');
+    badge.className = `route-badge ${route}`;
+    const labels = { rag: 'RAG — Luật Dân Sự', web: 'Web Search', calc: 'Calculator' };
+    badge.textContent = labels[route] || route;
+    content.appendChild(badge);
+  }
+
+  // Audio player (từ file audio liên quan)
+  if (audioInfo && audioInfo.url) {
+    const audioBox = document.createElement('div');
+    audioBox.className = 'audio-box';
+    audioBox.innerHTML = `
+      <div class="audio-label">&#127911; Audio liên quan (độ khớp: ${Math.round(audioInfo.score * 100)}%)</div>
+      <audio controls preload="none" src="${API}${audioInfo.url}"></audio>
+      <div class="audio-desc">${audioInfo.description}</div>
+    `;
+    content.appendChild(audioBox);
+  }
+
+  if (sources && sources.length > 0) {
+    const srcDiv = document.createElement('div');
+    srcDiv.className = 'sources';
+    const articles = sources.filter(s => s.article_number);
+    articles.forEach(s => {
+      const tag = document.createElement('span');
+      tag.className = 'source-tag';
+      tag.textContent = `Điều ${s.article_number}`;
+      srcDiv.appendChild(tag);
+    });
+    if (articles.length > 0) content.appendChild(srcDiv);
+  }
+
+  // Footer: time + speak button
+  const footer = document.createElement('div');
+  footer.className = 'msg-footer';
+
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = timeNow();
+  footer.appendChild(time);
+
+  if (role === 'bot' && text && !text.startsWith('[')) {
+    const speakBtn = document.createElement('button');
+    speakBtn.className = 'btn-speak';
+    speakBtn.innerHTML = '&#128264;';
+    speakBtn.title = 'Nghe câu trả lời';
+    speakBtn.onclick = () => speakText(text, speakBtn);
+    footer.appendChild(speakBtn);
+  }
+
+  content.appendChild(footer);
+
+  row.appendChild(avatar);
+  row.appendChild(content);
+  document.getElementById('messages').appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth' });
+  return row;
+}
+
+function addTyping() {
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  row.id = 'typing';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.innerHTML = '&#9878;';
+
+  const content = document.createElement('div');
+  content.className = 'msg-content';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+
+  const dots = document.createElement('div');
+  dots.className = 'typing-indicator';
+  dots.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+  bubble.appendChild(dots);
+  content.appendChild(bubble);
+  row.appendChild(avatar);
+  row.appendChild(content);
+  document.getElementById('messages').appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth' });
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+// ── TTS: Nghe câu trả lời ──
+let currentAudio = null;
+
+async function speakText(text, btn) {
+  // Nếu đang phát thì dừng
+  if (currentAudio && !currentAudio.paused) {
+    currentAudio.pause();
+    currentAudio = null;
+    document.querySelectorAll('.btn-speak.playing').forEach(b => b.classList.remove('playing'));
+    return;
+  }
+
+  btn.classList.add('playing');
+  btn.innerHTML = '&#9209;'; // pause icon
+
+  try {
+    const res = await fetch(`${API}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text })
+    });
+
+    if (!res.ok) throw new Error('TTS lỗi');
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+
+    currentAudio.onended = () => {
+      btn.classList.remove('playing');
+      btn.innerHTML = '&#128264;';
+      URL.revokeObjectURL(url);
+      currentAudio = null;
+    };
+
+    currentAudio.play();
+  } catch (e) {
+    btn.classList.remove('playing');
+    btn.innerHTML = '&#128264;';
+    addMessage('Không thể phát âm thanh. Kiểm tra server có cài gTTS chưa.', 'bot');
+  }
+}
+
+// ── Send text ──
+async function send() {
+  if (isLoading) return;
+  const input = document.getElementById('input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  isLoading = true;
+  document.getElementById('btnSend').disabled = true;
+
+  addMessage(q, 'user');
+  addTyping();
+
+  try {
+    const res = await fetch(`${API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, top_k: 5 })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.answer) {
+      addMessage(data.answer, 'bot', data.sources, data.audio, data.route);
+    } else if (data.detail) {
+      addMessage('Lỗi: ' + data.detail, 'bot');
+    } else {
+      addMessage('Lỗi: ' + JSON.stringify(data), 'bot');
+    }
+  } catch (e) {
+    removeTyping();
+    addMessage('Không kết nối được server. Hãy chạy: uvicorn step12_api:app --port 8000', 'bot');
+  }
+
+  isLoading = false;
+  document.getElementById('btnSend').disabled = false;
+  input.focus();
+}
+
+function sendSuggestion(el) {
+  document.getElementById('input').value = el.textContent;
+  send();
+}
+
+// ── Microphone Recording ──
+let mediaRecorder = null;
+let audioChunks = [];
+let recInterval = null;
+let recSeconds = 0;
+
+function toggleMic() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    recSeconds = 0;
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(recInterval);
+    };
+
+    mediaRecorder.start();
+    document.getElementById('btnMic').classList.add('recording');
+    document.getElementById('recordingBar').classList.add('active');
+
+    recInterval = setInterval(() => {
+      recSeconds++;
+      const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+      const s = String(recSeconds % 60).padStart(2, '0');
+      document.getElementById('recTime').textContent = `${m}:${s}`;
+    }, 1000);
+
+  } catch (err) {
+    addMessage('Không truy cập được microphone. Hãy cho phép trình duyệt sử dụng micro.', 'bot');
+  }
+}
+
+function cancelRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+  document.getElementById('btnMic').classList.remove('recording');
+  document.getElementById('recordingBar').classList.remove('active');
+  audioChunks = [];
+  recSeconds = 0;
+  document.getElementById('recTime').textContent = '00:00';
+}
+
+async function stopRecording() {
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+
+  return new Promise((resolve) => {
+    mediaRecorder.onstop = async () => {
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      clearInterval(recInterval);
+
+      document.getElementById('btnMic').classList.remove('recording');
+      document.getElementById('recordingBar').classList.remove('active');
+      document.getElementById('recTime').textContent = '00:00';
+
+      if (audioChunks.length === 0) { resolve(); return; }
+
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      audioChunks = [];
+      recSeconds = 0;
+
+      // Gửi lên server
+      isLoading = true;
+      document.getElementById('btnSend').disabled = true;
+
+      const duration = recSeconds;
+      addMessage(`[Ghi âm giọng nói]`, 'user');
+      addTyping();
+
+      const formData = new FormData();
+      formData.append('audio', blob, 'recording.webm');
+      formData.append('top_k', '5');
+
+      try {
+        const res = await fetch(`${API}/ask/multimodal`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        removeTyping();
+
+        if (data.question) {
+          addMessage(`[Đã nhận diện: "${data.question}"]`, 'bot');
+        }
+        if (data.answer) {
+          addMessage(data.answer, 'bot', data.sources, data.audio, data.route);
+        } else if (data.detail) {
+          addMessage('Lỗi: ' + data.detail, 'bot');
+        }
+      } catch (e) {
+        removeTyping();
+        addMessage('Không gửi được ghi âm. Kiểm tra server.', 'bot');
+      }
+
+      isLoading = false;
+      document.getElementById('btnSend').disabled = false;
+      resolve();
+    };
+
+    mediaRecorder.stop();
+  });
+}
+
+// ── File Upload ──
+function openUpload() { document.getElementById('uploadOverlay').classList.add('active'); }
+function closeUpload() { document.getElementById('uploadOverlay').classList.remove('active'); }
+
+function triggerUpload(type) {
+  closeUpload();
+  if (type === 'audio') document.getElementById('fileAudio').click();
+  else document.getElementById('fileImage').click();
+}
+
+async function handleFile(type) {
+  const fileInput = type === 'audio' ? document.getElementById('fileAudio') : document.getElementById('fileImage');
+  const file = fileInput.files[0];
+  if (!file) return;
+  fileInput.value = '';
+
+  isLoading = true;
+  document.getElementById('btnSend').disabled = true;
+
+  const label = type === 'audio' ? `[Âm thanh: ${file.name}]` : `[Hình ảnh: ${file.name}]`;
+  addMessage(label, 'user');
+  addTyping();
+
+  const formData = new FormData();
+  formData.append(type, file);
+  formData.append('top_k', '5');
+
+  try {
+    const res = await fetch(`${API}/ask/multimodal`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.question) {
+      addMessage(`[Đã nhận diện: "${data.question}"]`, 'bot');
+    }
+    if (data.answer) {
+      addMessage(data.answer, 'bot', data.sources, data.audio, data.route);
+    } else if (data.detail) {
+      addMessage('Lỗi: ' + data.detail, 'bot');
+    }
+  } catch (e) {
+    removeTyping();
+    addMessage('Không gửi được file. Kiểm tra server.', 'bot');
+  }
+
+  isLoading = false;
+  document.getElementById('btnSend').disabled = false;
+}
+</script>
+</body>
+</html>
